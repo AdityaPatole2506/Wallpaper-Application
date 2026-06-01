@@ -209,6 +209,26 @@ fun WallpaperScreen() {
                     ) {
                         Text("Select Photos")
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = {
+
+                            selectedPhotos = emptyList()
+
+                            scope.launch {
+                                PhotoStorage.savePhotos(
+                                    context,
+                                    emptyList()
+                                )
+                            }
+                        }
+                    ) {
+                        Text("Clear All Photos")
+                    }
+
+                        Text("Select Photos")
+
 
                     Spacer(modifier = Modifier.height(20.dp))
 
