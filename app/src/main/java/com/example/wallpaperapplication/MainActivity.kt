@@ -30,6 +30,11 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
+import androidx.work.OneTimeWorkRequestBuilder
 
 class MainActivity : ComponentActivity() {
 
@@ -94,6 +99,27 @@ fun WallpaperScreen() {
                 }
             }
         )
+    }
+    fun scheduleWallpaperWorker(context: Context) {
+
+        val workRequest =
+            PeriodicWorkRequestBuilder<WallpaperWorker>(
+                15,
+                TimeUnit.MINUTES
+            ).build()
+
+        WorkManager.getInstance(context)
+            .enqueueUniquePeriodicWork(
+                "wallpaper_worker",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                workRequest
+            )
+    }
+    fun stopWallpaperWorker(context: Context) {
+
+        WorkManager
+            .getInstance(context)
+            .cancelUniqueWork("wallpaper_worker")
     }
     LaunchedEffect(Unit) {
         val savedUris = PhotoStorage.loadPhotos(context)
@@ -197,7 +223,35 @@ fun WallpaperScreen() {
                         Text("Set Random Wallpaper")
                     }
                     Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            scheduleWallpaperWorker(context)
 
+                            Toast.makeText(
+                                context,
+                                "Auto Wallpaper Started",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    ) {
+                        Text("Start Auto Wallpaper")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = {
+
+                            stopWallpaperWorker(context)
+
+                            Toast.makeText(
+                                context,
+                                "Auto Wallpaper Stopped",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    ) {
+                        Text("Stop Auto Wallpaper")
+                    }
                     Button(
                         onClick = {
                             photoPickerLauncher.launch(
