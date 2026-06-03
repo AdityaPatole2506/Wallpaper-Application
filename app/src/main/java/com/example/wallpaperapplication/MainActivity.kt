@@ -57,6 +57,9 @@ fun WallpaperScreen() {
     var photoToDelete by remember {
         mutableStateOf<Uri?>(null)
     }
+    var intervalMinutes by remember {
+        mutableStateOf("15")
+    }
     if (photoToDelete != null) {
         AlertDialog(
             onDismissRequest = {
@@ -100,12 +103,15 @@ fun WallpaperScreen() {
             }
         )
     }
-    fun scheduleWallpaperWorker(context: Context) {
+    fun scheduleWallpaperWorker(
+        context: Context,
+        intervalMinutes: Long
+    ) {
 
         val workRequest =
             PeriodicWorkRequestBuilder<WallpaperWorker>(
-                15,
-                TimeUnit.MINUTES
+                repeatInterval = intervalMinutes,
+                repeatIntervalTimeUnit = TimeUnit.MINUTES
             ).build()
 
         WorkManager.getInstance(context)
@@ -225,19 +231,46 @@ fun WallpaperScreen() {
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
-                            scheduleWallpaperWorker(context)
+                            val minutes =
+                                intervalMinutes.toLongOrNull() ?: 15
 
-                            Toast.makeText(
-                                context,
-                                "Auto Wallpaper Started",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            if (minutes < 15) {
+
+                                Toast.makeText(
+                                    context,
+                                    "Minimum interval is 15 minutes",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                            } else {
+
+                                scheduleWallpaperWorker(
+                                    context,
+                                    minutes
+                                )
+
+                                Toast.makeText(
+                                    context,
+                                    "Auto Wallpaper Started ($minutes min)",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-                    ) {
+                    )
+
+                    {
                         Text("Start Auto Wallpaper")
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-
+                    OutlinedTextField(
+                        value = intervalMinutes,
+                        onValueChange = {
+                            intervalMinutes = it
+                        },
+                        label = {
+                            Text("Interval (minutes)")
+                        }
+                    )
                     Button(
                         onClick = {
 
