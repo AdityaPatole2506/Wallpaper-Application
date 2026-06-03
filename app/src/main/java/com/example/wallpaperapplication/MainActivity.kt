@@ -35,6 +35,13 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 class MainActivity : ComponentActivity() {
 
@@ -47,13 +54,20 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WallpaperScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
     var selectedPhotos by remember {
         mutableStateOf<List<Uri>>(emptyList())
     }
+
+    var wallpaperHistory by remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
+
     var photoToDelete by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -128,11 +142,15 @@ fun WallpaperScreen() {
             .cancelUniqueWork("wallpaper_worker")
     }
     LaunchedEffect(Unit) {
-        val savedUris = PhotoStorage.loadPhotos(context)
 
-        selectedPhotos = savedUris.map {
-            Uri.parse(it)
-        }
+        val savedUris =
+            PhotoStorage.loadPhotos(context)
+
+        selectedPhotos =
+            savedUris.map { Uri.parse(it) }
+
+        wallpaperHistory =
+            WallpaperHistory.loadHistory(context)
     }
     val photoPickerLauncher =
         rememberLauncherForActivityResult(
@@ -166,13 +184,18 @@ fun WallpaperScreen() {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Top
                 ) {
-
-                    Text(
-                        text = "Wallpaper Application",
-                        style = MaterialTheme.typography.headlineMedium
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text("Wallpaper Application")
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
                     )
+
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
@@ -203,12 +226,14 @@ fun WallpaperScreen() {
 
                                 WallpaperManager
                                     .getInstance(context)
-                                    .setBitmap(
-                                        bitmap,
-                                        null,
-                                        true,
-                                        WallpaperManager.FLAG_SYSTEM
-                                    )
+                                    .setBitmap(bitmap)
+
+                                WallpaperHistory.saveWallpaper(
+                                    context,
+                                    randomUri.toString()
+                                )
+                                wallpaperHistory =
+                                    WallpaperHistory.loadHistory(context)
 
                                 Toast.makeText(
                                     context,
@@ -314,8 +339,6 @@ fun WallpaperScreen() {
                         Text("Clear All Photos")
                     }
 
-                        Text("Select Photos")
-
 
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -335,28 +358,28 @@ fun WallpaperScreen() {
                                     contentDescription = null,
                                     modifier = Modifier
                                         .padding(8.dp)
-                                        .size(150.dp)
-                                        .clickable {
-                                            photoToDelete = photo
-                                        },
-                                    contentScale = ContentScale.Crop
+                                        .aspectRatio(9f / 16f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .border(
+                                            width = 2.dp,
+                                            color = Color.Gray,
+                                            shape = RoundedCornerShape(16.dp)
+                                        ),
+                                    contentScale = ContentScale.Fit
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
+
+                                Spacer(modifier = Modifier.height(20.dp))
+
+
+
+
+
+                                    }
                             }
 
-                            item(
-                                span = {
-                                    GridItemSpan(maxLineSpan)
-                                }
-                            ) {
-                                Text(
-                                    text = "Selected Photos: ${selectedPhotos.size}"
-                                )
-                            }
+
                         }
                     }
-                    }}}
-
-
-
+                    }}
