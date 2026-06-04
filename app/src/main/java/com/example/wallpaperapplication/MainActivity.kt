@@ -364,6 +364,45 @@ fun WallpaperScreen() {
                                     modifier = Modifier
                                         .padding(8.dp)
                                         .aspectRatio(9f / 16f)
+                                        .clickable {
+                                            try {
+                                                val inputStream =
+                                                    context.contentResolver.openInputStream(photo)
+
+                                                val bitmap =
+                                                    BitmapFactory.decodeStream(inputStream)
+
+                                                WallpaperManager
+                                                    .getInstance(context)
+                                                    .setBitmap(
+                                                        bitmap,
+                                                        null,
+                                                        true,
+                                                        WallpaperManager.FLAG_SYSTEM
+                                                    )
+
+                                                WallpaperHistory.saveWallpaper(
+                                                    context,
+                                                    photo.toString()
+                                                )
+
+                                                wallpaperHistory =
+                                                    WallpaperHistory.loadHistory(context)
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Wallpaper Set!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+
+                                            } catch (e: Exception) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to set wallpaper",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
                                         .clip(RoundedCornerShape(16.dp))
                                         .border(
                                             width = 2.dp,
