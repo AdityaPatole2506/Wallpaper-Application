@@ -226,7 +226,12 @@ fun WallpaperScreen() {
 
                                 WallpaperManager
                                     .getInstance(context)
-                                    .setBitmap(bitmap)
+                                    .setBitmap(
+                                        bitmap,
+                                        null,
+                                        true,
+                                        WallpaperManager.FLAG_SYSTEM
+                                    )
 
                                 WallpaperHistory.saveWallpaper(
                                     context,

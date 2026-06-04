@@ -52,7 +52,12 @@ class WallpaperWorker(
 
             WallpaperManager
                 .getInstance(applicationContext)
-                .setBitmap(bitmap)
+                .setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_SYSTEM
+                )
 
             WallpaperHistory.saveWallpaper(
                 applicationContext,
