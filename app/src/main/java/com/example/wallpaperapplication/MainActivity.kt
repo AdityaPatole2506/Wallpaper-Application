@@ -226,12 +226,7 @@ fun WallpaperScreen() {
 
                                 WallpaperManager
                                     .getInstance(context)
-                                    .setBitmap(
-                                        bitmap,
-                                        null,
-                                        true,
-                                        WallpaperManager.FLAG_SYSTEM
-                                    )
+                                    .setBitmap(bitmap)
 
                                 WallpaperHistory.saveWallpaper(
                                     context,
@@ -240,12 +235,12 @@ fun WallpaperScreen() {
                                 wallpaperHistory =
                                     WallpaperHistory.loadHistory(context)
 
+
                                 Toast.makeText(
                                     context,
                                     "Wallpaper Updated!",
                                     Toast.LENGTH_SHORT
                                 ).show()
-
                             } catch (e: Exception) {
 
                                 Toast.makeText(
@@ -347,8 +342,80 @@ fun WallpaperScreen() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    if (selectedPhotos.isNotEmpty()) {
+                    if (true) {
 
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        if (true) {
+
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp)
+                            ) {
+
+                                items(selectedPhotos) { photo ->
+
+                                    AsyncImage(
+                                        model = photo,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .aspectRatio(9f / 16f)
+                                            .clickable {
+
+                                                try {
+
+                                                    val inputStream =
+                                                        context.contentResolver.openInputStream(photo)
+
+                                                    val bitmap =
+                                                        BitmapFactory.decodeStream(inputStream)
+
+                                                    WallpaperManager
+                                                        .getInstance(context)
+                                                        .setBitmap(bitmap)
+
+                                                    WallpaperHistory.saveWallpaper(
+                                                        context,
+                                                        photo.toString()
+                                                    )
+
+                                                    wallpaperHistory =
+                                                        WallpaperHistory.loadHistory(context)
+
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Wallpaper Set!",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+
+                                                } catch (e: Exception) {
+
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Failed to set wallpaper",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .border(
+                                                width = 2.dp,
+                                                color = Color.Gray,
+                                                shape = RoundedCornerShape(16.dp)
+                                            ),
+                                        contentScale = ContentScale.Fit
+                                    )}}}
+                        Text(
+                            text = "Recent Wallpapers",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        wallpaperHistory.takeLast(4).forEach { uri ->
+                            Text(text = uri)
+                        }
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             modifier = Modifier
@@ -356,53 +423,14 @@ fun WallpaperScreen() {
                                 .height(300.dp)
                         ) {
 
-                            items(selectedPhotos) { photo ->
+                            items(wallpaperHistory.takeLast(6).reversed()) { uri ->
 
                                 AsyncImage(
-                                    model = photo,
+                                    model = uri,
                                     contentDescription = null,
                                     modifier = Modifier
                                         .padding(8.dp)
                                         .aspectRatio(9f / 16f)
-                                        .clickable {
-                                            try {
-                                                val inputStream =
-                                                    context.contentResolver.openInputStream(photo)
-
-                                                val bitmap =
-                                                    BitmapFactory.decodeStream(inputStream)
-
-                                                WallpaperManager
-                                                    .getInstance(context)
-                                                    .setBitmap(
-                                                        bitmap,
-                                                        null,
-                                                        true,
-                                                        WallpaperManager.FLAG_SYSTEM
-                                                    )
-
-                                                WallpaperHistory.saveWallpaper(
-                                                    context,
-                                                    photo.toString()
-                                                )
-
-                                                wallpaperHistory =
-                                                    WallpaperHistory.loadHistory(context)
-
-                                                Toast.makeText(
-                                                    context,
-                                                    "Wallpaper Set!",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-
-                                            } catch (e: Exception) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Failed to set wallpaper",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        }
                                         .clip(RoundedCornerShape(16.dp))
                                         .border(
                                             width = 2.dp,
@@ -411,19 +439,6 @@ fun WallpaperScreen() {
                                         ),
                                     contentScale = ContentScale.Fit
                                 )
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Spacer(modifier = Modifier.height(20.dp))
-
-
-
-
-
-                                    }
                             }
-
-
                         }
-                    }
-                    }}
+                    }}}}
