@@ -35,7 +35,9 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
-
+import androidx.core.content.ContextCompat
+import android.os.PowerManager
+import android.provider.Settings
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +65,31 @@ fun WallpaperScreen() {
     var intervalMinutes by remember {
         mutableStateOf("15")
     }
+    fun requestBatteryOptimizationExemption() {
 
+        val powerManager =
+            context.getSystemService(
+                Context.POWER_SERVICE
+            ) as PowerManager
+
+        if (!powerManager.isIgnoringBatteryOptimizations(
+                context.packageName
+            )
+        ) {
+
+            val intent =
+                Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                ).apply {
+                    data =
+                        android.net.Uri.parse(
+                            "package:${context.packageName}"
+                        )
+                }
+
+            context.startActivity(intent)
+        }
+    }
     fun scheduleWallpaperWorker(
         context: Context,
         intervalMinutes: Long
@@ -86,7 +112,30 @@ fun WallpaperScreen() {
         WorkManager.getInstance(context)
             .cancelUniqueWork("wallpaper_worker")
     }
+    fun startForegroundWallpaperService() {
 
+        val intent =
+            Intent(
+                context,
+                WallpaperForegroundService::class.java
+            )
+
+        ContextCompat.startForegroundService(
+            context,
+            intent
+        )
+    }
+
+    fun stopForegroundWallpaperService() {
+
+        val intent =
+            Intent(
+                context,
+                WallpaperForegroundService::class.java
+            )
+
+        context.stopService(intent)
+    }
     LaunchedEffect(Unit) {
         selectedPhotos =
             PhotoStorage.loadPhotos(context)
@@ -231,14 +280,36 @@ fun WallpaperScreen() {
 
             Button(
                 onClick = {
+
                     val minutes =
                         intervalMinutes.toLongOrNull() ?: 15
 
+                    Toast.makeText(
+                        context,
+                        "Checking Battery Optimization",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     if (minutes >= 15) {
+                        Toast.makeText(
+                            context,
+                            "Requesting Exemption",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         scheduleWallpaperWorker(
                             context,
                             minutes
                         )
+                        scheduleWallpaperWorker(
+                            context,
+                            intervalMinutes = minutes
+                        )
+                        startForegroundWallpaperService()
+
+                        Toast.makeText(
+                            context,
+                            "Auto Wallpaper Started",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             ) {
@@ -247,7 +318,16 @@ fun WallpaperScreen() {
 
             Button(
                 onClick = {
+
                     stopWallpaperWorker(context)
+
+                    stopForegroundWallpaperService()
+
+                    Toast.makeText(
+                        context,
+                        "Auto Wallpaper Stopped",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             ) {
                 Text("Stop Auto Wallpaper")
