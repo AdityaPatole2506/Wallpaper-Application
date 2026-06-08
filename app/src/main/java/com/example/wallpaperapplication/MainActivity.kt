@@ -65,6 +65,10 @@ fun WallpaperScreen() {
     var intervalMinutes by remember {
         mutableStateOf("15")
     }
+
+    var selectedTarget by remember {
+        mutableStateOf("Both")
+    }
     fun requestBatteryOptimizationExemption() {
 
         val powerManager =
@@ -228,19 +232,43 @@ fun WallpaperScreen() {
 
                         val wm = WallpaperManager.getInstance(context)
 
-                        wm.setBitmap(
-                            bitmap,
-                            null,
-                            true,
-                            WallpaperManager.FLAG_SYSTEM
-                        )
+                        when (selectedTarget) {
 
-                        wm.setBitmap(
-                            bitmap,
-                            null,
-                            true,
-                            WallpaperManager.FLAG_LOCK
-                        )
+                            "Home" -> {
+                                wm.setBitmap(
+                                    bitmap,
+                                    null,
+                                    true,
+                                    WallpaperManager.FLAG_SYSTEM
+                                )
+                            }
+
+                            "Lock" -> {
+                                wm.setBitmap(
+                                    bitmap,
+                                    null,
+                                    true,
+                                    WallpaperManager.FLAG_LOCK
+                                )
+                            }
+
+                            "Both" -> {
+
+                                wm.setBitmap(
+                                    bitmap,
+                                    null,
+                                    true,
+                                    WallpaperManager.FLAG_SYSTEM
+                                )
+
+                                wm.setBitmap(
+                                    bitmap,
+                                    null,
+                                    true,
+                                    WallpaperManager.FLAG_LOCK
+                                )
+                            }
+                        }
 
                         WallpaperHistory.saveWallpaper(
                             context,
@@ -275,7 +303,34 @@ fun WallpaperScreen() {
                 onValueChange = { intervalMinutes = it },
                 label = { Text("Interval (minutes)") }
             )
+            Text(
+                text = "Wallpaper Target",
+                style = MaterialTheme.typography.titleMedium
+            )
 
+            Row {
+
+                listOf(
+                    "Home",
+                    "Lock",
+                    "Both"
+                ).forEach { target ->
+
+                    FilterChip(
+                        selected = selectedTarget == target,
+                        onClick = {
+                            selectedTarget = target
+                        },
+                        label = {
+                            Text(target)
+                        }
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(
@@ -363,20 +418,43 @@ fun WallpaperScreen() {
 
                                         val wm = WallpaperManager.getInstance(context)
 
-                                        wm.setBitmap(
-                                            bitmap,
-                                            null,
-                                            true,
-                                            WallpaperManager.FLAG_SYSTEM
-                                        )
+                                        when (selectedTarget) {
 
-                                        wm.setBitmap(
-                                            bitmap,
-                                            null,
-                                            true,
-                                            WallpaperManager.FLAG_LOCK
-                                        )
+                                            "Home" -> {
+                                                wm.setBitmap(
+                                                    bitmap,
+                                                    null,
+                                                    true,
+                                                    WallpaperManager.FLAG_SYSTEM
+                                                )
+                                            }
 
+                                            "Lock" -> {
+                                                wm.setBitmap(
+                                                    bitmap,
+                                                    null,
+                                                    true,
+                                                    WallpaperManager.FLAG_LOCK
+                                                )
+                                            }
+
+                                            "Both" -> {
+
+                                                wm.setBitmap(
+                                                    bitmap,
+                                                    null,
+                                                    true,
+                                                    WallpaperManager.FLAG_SYSTEM
+                                                )
+
+                                                wm.setBitmap(
+                                                    bitmap,
+                                                    null,
+                                                    true,
+                                                    WallpaperManager.FLAG_LOCK
+                                                )
+                                            }
+                                        }
                                         WallpaperHistory.saveWallpaper(
                                             context,
                                             photo.toString()
