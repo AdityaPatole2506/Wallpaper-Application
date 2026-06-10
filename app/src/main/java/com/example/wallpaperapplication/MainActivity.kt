@@ -1,5 +1,6 @@
 package com.example.wallpaperapplication
 
+//IMPORT SECTION
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
@@ -54,6 +55,7 @@ fun WallpaperScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+//VAR SECTION
     var selectedPhotos by remember {
         mutableStateOf<List<Uri>>(emptyList())
     }

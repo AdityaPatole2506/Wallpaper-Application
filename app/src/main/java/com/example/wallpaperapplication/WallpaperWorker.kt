@@ -1,5 +1,6 @@
 package com.example.wallpaperapplication
 
+//IMPORT SECTION
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.BitmapFactory
