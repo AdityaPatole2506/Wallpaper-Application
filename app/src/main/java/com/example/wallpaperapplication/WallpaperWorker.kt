@@ -1,12 +1,11 @@
 package com.example.wallpaperapplication
 
-//IMPORT SECTION
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import android.net.Uri
 import kotlin.random.Random
 
 class WallpaperWorker(
@@ -14,45 +13,117 @@ class WallpaperWorker(
     params: WorkerParameters
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
-        android.os.Handler(
-            android.os.Looper.getMainLooper()
-        ).post {
-            android.widget.Toast.makeText(
-                applicationContext,
-                "Worker Running",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
+    // =========================
+    // APPLY DEFAULT WALLPAPERS
+    // =========================
+
+    private fun applyDefaultWallpapers() {
+
+        try {
+
+            val wm =
+                WallpaperManager.getInstance(
+                    applicationContext
+                )
+
+            DefaultWallpaperStorage
+                .getHomeWallpaper(
+                    applicationContext
+                )
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            applicationContext
+                                .contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_SYSTEM
+                    )
+                }
+
+            DefaultWallpaperStorage
+                .getLockWallpaper(
+                    applicationContext
+                )
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            applicationContext
+                                .contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_LOCK
+                    )
+                }
+
+        } catch (e: Exception) {
+
+            e.printStackTrace()
         }
-        android.util.Log.d(
-            "WallpaperWorker",
-            "Worker Started"
-        )
+    }
+
+    // =========================
+    // WORKER
+    // =========================
+
+    override suspend fun doWork(): Result {
+
         return try {
 
             val savedUris =
-                PhotoStorage.loadPhotos(applicationContext)
+                PhotoStorage.loadPhotos(
+                    applicationContext
+                )
 
+            // No wallpapers selected
             if (savedUris.isEmpty()) {
+
+                applyDefaultWallpapers()
+
                 return Result.success()
             }
 
             val randomUri =
                 Uri.parse(
                     savedUris[
-                        Random.nextInt(savedUris.size)
+                        Random.nextInt(
+                            savedUris.size
+                        )
                     ]
                 )
 
             val inputStream =
-                applicationContext.contentResolver
-                    .openInputStream(randomUri)
+                applicationContext
+                    .contentResolver
+                    .openInputStream(
+                        randomUri
+                    )
 
             val bitmap =
-                BitmapFactory.decodeStream(inputStream)
+                BitmapFactory.decodeStream(
+                    inputStream
+                )
 
             WallpaperManager
-                .getInstance(applicationContext)
+                .getInstance(
+                    applicationContext
+                )
                 .setBitmap(
                     bitmap,
                     null,
@@ -60,30 +131,16 @@ class WallpaperWorker(
                     WallpaperManager.FLAG_SYSTEM
                 )
 
-            android.os.Handler(
-                android.os.Looper.getMainLooper()
-            ).post {
-                android.widget.Toast.makeText(
-                    applicationContext,
-                    "Wallpaper Changed",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-            }
-
             Result.success()
-        } catch (e: Exception) {
 
-            android.os.Handler(
-                android.os.Looper.getMainLooper()
-            ).post {
-                android.widget.Toast.makeText(
-                    applicationContext,
-                    e.message ?: "Unknown Error",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-            }
+        } catch (e: Exception) {
 
             e.printStackTrace()
 
+            // Worker failed
+            applyDefaultWallpapers()
+
             Result.failure()
-        }}}
+        }
+    }
+}

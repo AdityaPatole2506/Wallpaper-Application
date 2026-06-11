@@ -253,7 +253,65 @@ fun WallpaperScreen() {
             }
         }
     }
+    // =========================
+    // WALLPAPER HELPER FUNCTION
+    // =========================
+    fun applyDefaultWallpapers() {
 
+        val wm =
+            WallpaperManager.getInstance(context)
+
+        try {
+
+            DefaultWallpaperStorage
+                .getHomeWallpaper(context)
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            context.contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_SYSTEM
+                    )
+                }
+
+            DefaultWallpaperStorage
+                .getLockWallpaper(context)
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            context.contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_LOCK
+                    )
+                }
+
+        } catch (e: Exception) {
+
+            Toast.makeText(
+                context,
+                "Failed to apply default wallpapers",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
     // =========================
     // LOAD SAVED DATA
     // =========================
@@ -790,6 +848,7 @@ fun WallpaperScreen() {
                     )
 
                     stopForegroundWallpaperService()
+                    applyDefaultWallpapers()
 
                     Toast.makeText(
                         context,
