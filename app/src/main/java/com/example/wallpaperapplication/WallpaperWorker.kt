@@ -60,11 +60,6 @@ class WallpaperWorker(
                     WallpaperManager.FLAG_SYSTEM
                 )
 
-            WallpaperHistory.saveWallpaper(
-                applicationContext,
-                randomUri.toString()
-            )
-
             android.os.Handler(
                 android.os.Looper.getMainLooper()
             ).post {

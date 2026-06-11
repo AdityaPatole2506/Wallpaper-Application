@@ -1,52 +1,76 @@
 package com.example.wallpaperapplication
 
-//IMPORT SECTION
+// =========================
+// IMPORT SECTION
+// =========================
+
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+import kotlin.random.Random
+
+
+// Compose Imports
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+
 import coil.compose.AsyncImage
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
-import kotlin.random.Random
-import androidx.core.content.ContextCompat
-import android.os.PowerManager
-import android.provider.Settings
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+
+// =========================
+// MAIN ACTIVITY
+// =========================
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             WallpaperScreen()
         }
     }
 }
+
+// =========================
+// WALLPAPER SCREEN
+// =========================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +79,12 @@ fun WallpaperScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-//VAR SECTION
+    // =========================
+    // VARIABLE SECTION
+    // =========================
+
     var selectedPhotos by remember {
         mutableStateOf<List<Uri>>(emptyList())
-    }
-
-    var wallpaperHistory by remember {
-        mutableStateOf<List<String>>(emptyList())
     }
 
     var intervalMinutes by remember {
@@ -71,6 +94,22 @@ fun WallpaperScreen() {
     var selectedTarget by remember {
         mutableStateOf("Both")
     }
+
+    var defaultHomeWallpaper by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+    var defaultLockWallpaper by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+    val scrollState =
+        rememberScrollState()
+
+    // =========================
+    // BATTERY OPTIMIZATION
+    // =========================
+
     fun requestBatteryOptimizationExemption() {
 
         val powerManager =
@@ -78,7 +117,8 @@ fun WallpaperScreen() {
                 Context.POWER_SERVICE
             ) as PowerManager
 
-        if (!powerManager.isIgnoringBatteryOptimizations(
+        if (
+            !powerManager.isIgnoringBatteryOptimizations(
                 context.packageName
             )
         ) {
@@ -87,8 +127,9 @@ fun WallpaperScreen() {
                 Intent(
                     Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
                 ).apply {
+
                     data =
-                        android.net.Uri.parse(
+                        Uri.parse(
                             "package:${context.packageName}"
                         )
                 }
@@ -96,10 +137,16 @@ fun WallpaperScreen() {
             context.startActivity(intent)
         }
     }
+
+    // =========================
+    // WORKMANAGER FUNCTIONS
+    // =========================
+
     fun scheduleWallpaperWorker(
         context: Context,
         intervalMinutes: Long
     ) {
+
         val workRequest =
             PeriodicWorkRequestBuilder<WallpaperWorker>(
                 repeatInterval = intervalMinutes,
@@ -114,10 +161,20 @@ fun WallpaperScreen() {
             )
     }
 
-    fun stopWallpaperWorker(context: Context) {
+    fun stopWallpaperWorker(
+        context: Context
+    ) {
+
         WorkManager.getInstance(context)
-            .cancelUniqueWork("wallpaper_worker")
+            .cancelUniqueWork(
+                "wallpaper_worker"
+            )
     }
+
+    // =========================
+    // FOREGROUND SERVICE
+    // =========================
+
     fun startForegroundWallpaperService() {
 
         val intent =
@@ -142,39 +199,175 @@ fun WallpaperScreen() {
 
         context.stopService(intent)
     }
-    LaunchedEffect(Unit) {
-        selectedPhotos =
-            PhotoStorage.loadPhotos(context)
-                .map { Uri.parse(it) }
 
-        wallpaperHistory =
-            WallpaperHistory.loadHistory(context)
+    // =========================
+    // WALLPAPER APPLY FUNCTION
+    // =========================
+
+    fun applyWallpaper(
+        bitmap: android.graphics.Bitmap
+    ) {
+
+        val wm =
+            WallpaperManager.getInstance(
+                context
+            )
+
+        when (selectedTarget) {
+
+            "Home" -> {
+
+                wm.setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_SYSTEM
+                )
+            }
+
+            "Lock" -> {
+
+                wm.setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_LOCK
+                )
+            }
+
+            else -> {
+
+                wm.setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_SYSTEM
+                )
+
+                wm.setBitmap(
+                    bitmap,
+                    null,
+                    true,
+                    WallpaperManager.FLAG_LOCK
+                )
+            }
+        }
     }
+
+    // =========================
+    // LOAD SAVED DATA
+    // =========================
+
+    LaunchedEffect(Unit) {
+
+        selectedPhotos =
+            PhotoStorage
+                .loadPhotos(context)
+                .map {
+                    Uri.parse(it)
+                }
+
+        defaultHomeWallpaper =
+            DefaultWallpaperStorage
+                .getHomeWallpaper(context)
+                ?.let {
+                    Uri.parse(it)
+                }
+
+        defaultLockWallpaper =
+            DefaultWallpaperStorage
+                .getLockWallpaper(context)
+                ?.let {
+                    Uri.parse(it)
+                }
+    }
+
+    // =========================
+    // PHOTO PICKER
+    // =========================
 
     val photoPickerLauncher =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickMultipleVisualMedia()
+            contract =
+                ActivityResultContracts
+                    .PickMultipleVisualMedia()
         ) { uris ->
 
             selectedPhotos = uris
 
             uris.forEach { uri ->
+
                 try {
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
+
+                    context.contentResolver
+                        .takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+
                 } catch (_: Exception) {
                 }
             }
 
             scope.launch {
+
                 PhotoStorage.savePhotos(
                     context,
-                    uris.map { it.toString() }
+                    uris.map {
+                        it.toString()
+                    }
                 )
             }
         }
+
+    // =========================
+    // DEFAULT HOME PICKER
+    // =========================
+
+    val homeWallpaperPicker =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts
+                    .PickVisualMedia()
+        ) { uri ->
+
+            uri?.let {
+
+                defaultHomeWallpaper = it
+
+                DefaultWallpaperStorage
+                    .saveHomeWallpaper(
+                        context,
+                        it.toString()
+                    )
+            }
+        }
+
+    // =========================
+    // DEFAULT LOCK PICKER
+    // =========================
+
+    val lockWallpaperPicker =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts
+                    .PickVisualMedia()
+        ) { uri ->
+
+            uri?.let {
+
+                defaultLockWallpaper = it
+
+                DefaultWallpaperStorage
+                    .saveLockWallpaper(
+                        context,
+                        it.toString()
+                    )
+            }
+        }
+    // =========================
+    // MAIN UI
+    // =========================
 
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -183,23 +376,41 @@ fun WallpaperScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
+
+            // =========================
+            // TOP BAR
+            // =========================
 
             CenterAlignedTopAppBar(
                 title = {
-                    Text("Wallpaper Application")
+                    Text(
+                        "Wallpaper Application"
+                    )
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // =========================
+            // SELECT PHOTOS
+            // =========================
 
             Button(
                 onClick = {
+
                     photoPickerLauncher.launch(
                         PickVisualMediaRequest(
-                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                            ActivityResultContracts
+                                .PickVisualMedia
+                                .ImageOnly
                         )
                     )
                 }
@@ -207,78 +418,50 @@ fun WallpaperScreen() {
                 Text("Select Photos")
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // =========================
+            // RANDOM WALLPAPER
+            // =========================
 
             Button(
                 onClick = {
 
-                    if (selectedPhotos.isEmpty()) {
+                    if (
+                        selectedPhotos.isEmpty()
+                    ) {
+
                         Toast.makeText(
                             context,
                             "Please select photos first",
                             Toast.LENGTH_SHORT
                         ).show()
+
                         return@Button
                     }
 
                     try {
+
                         val randomUri =
                             selectedPhotos[
-                                Random.nextInt(selectedPhotos.size)
+                                Random.nextInt(
+                                    selectedPhotos.size
+                                )
                             ]
 
                         val bitmap =
                             BitmapFactory.decodeStream(
-                                context.contentResolver.openInputStream(randomUri)
+                                context.contentResolver
+                                    .openInputStream(
+                                        randomUri
+                                    )
                             )
 
-                        val wm = WallpaperManager.getInstance(context)
-
-                        when (selectedTarget) {
-
-                            "Home" -> {
-                                wm.setBitmap(
-                                    bitmap,
-                                    null,
-                                    true,
-                                    WallpaperManager.FLAG_SYSTEM
-                                )
-                            }
-
-                            "Lock" -> {
-                                wm.setBitmap(
-                                    bitmap,
-                                    null,
-                                    true,
-                                    WallpaperManager.FLAG_LOCK
-                                )
-                            }
-
-                            "Both" -> {
-
-                                wm.setBitmap(
-                                    bitmap,
-                                    null,
-                                    true,
-                                    WallpaperManager.FLAG_SYSTEM
-                                )
-
-                                wm.setBitmap(
-                                    bitmap,
-                                    null,
-                                    true,
-                                    WallpaperManager.FLAG_LOCK
-                                )
-                            }
-                        }
-
-                        WallpaperHistory.saveWallpaper(
-                            context,
-                            randomUri.toString()
+                        applyWallpaper(
+                            bitmap
                         )
-
-                        wallpaperHistory =
-                            WallpaperHistory.loadHistory(context)
 
                         Toast.makeText(
                             context,
@@ -287,30 +470,69 @@ fun WallpaperScreen() {
                         ).show()
 
                     } catch (e: Exception) {
+
                         Toast.makeText(
                             context,
-                            e.message ?: "Error",
+                            e.message
+                                ?: "Unknown Error",
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 }
             ) {
-                Text("Set Random Wallpaper")
+                Text(
+                    "Set Random Wallpaper"
+                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // =========================
+            // INTERVAL INPUT
+            // =========================
 
             OutlinedTextField(
                 value = intervalMinutes,
-                onValueChange = { intervalMinutes = it },
-                label = { Text("Interval (minutes)") }
-            )
-            Text(
-                text = "Wallpaper Target",
-                style = MaterialTheme.typography.titleMedium
+
+                onValueChange = {
+                    intervalMinutes = it
+                },
+
+                label = {
+                    Text(
+                        "Interval (minutes)"
+                    )
+                }
             )
 
-            Row {
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // =========================
+            // WALLPAPER TARGET
+            // =========================
+
+            Text(
+                text = "Wallpaper Target",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            Row(
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        8.dp
+                    )
+            ) {
 
                 listOf(
                     "Home",
@@ -319,64 +541,253 @@ fun WallpaperScreen() {
                 ).forEach { target ->
 
                     FilterChip(
-                        selected = selectedTarget == target,
+                        selected =
+                            selectedTarget == target,
+
                         onClick = {
                             selectedTarget = target
                         },
+
                         label = {
                             Text(target)
                         }
                     )
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            // =========================
+            // DEFAULT WALLPAPERS
+            // =========================
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+
+                shape =
+                    RoundedCornerShape(
+                        20.dp
+                    )
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp),
+
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
+                ) {
+
+                    Text(
+                        text = "Default Wallpapers",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+
+                        // =========================
+                        // HOME WALLPAPER
+                        // =========================
+
+                        Column(
+                            horizontalAlignment =
+                                Alignment.CenterHorizontally
+                        ) {
+
+                            defaultHomeWallpaper?.let {
+
+                                AsyncImage(
+                                    model = it,
+                                    contentDescription = null,
+
+                                    modifier = Modifier
+                                        .size(
+                                            width = 90.dp,
+                                            height = 160.dp
+                                        )
+                                        .clip(
+                                            RoundedCornerShape(
+                                                16.dp
+                                            )
+                                        ),
+
+                                    contentScale =
+                                        ContentScale.Crop
+                                )
+                            }
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Text("Home")
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Button(
+                                onClick = {
+
+                                    homeWallpaperPicker.launch(
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts
+                                                .PickVisualMedia
+                                                .ImageOnly
+                                        )
+                                    )
+                                }
+                            ) {
+
+                                Text("Select")
+                            }
+                        }
+
+                        // =========================
+                        // LOCK WALLPAPER
+                        // =========================
+
+                        Column(
+                            horizontalAlignment =
+                                Alignment.CenterHorizontally
+                        ) {
+
+                            defaultLockWallpaper?.let {
+
+                                AsyncImage(
+                                    model = it,
+                                    contentDescription = null,
+
+                                    modifier = Modifier
+                                        .size(
+                                            width = 90.dp,
+                                            height = 160.dp
+                                        )
+                                        .clip(
+                                            RoundedCornerShape(
+                                                16.dp
+                                            )
+                                        ),
+
+                                    contentScale =
+                                        ContentScale.Crop
+                                )
+                            }
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Text("Lock")
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Button(
+                                onClick = {
+
+                                    lockWallpaperPicker.launch(
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts
+                                                .PickVisualMedia
+                                                .ImageOnly
+                                        )
+                                    )
+                                }
+                            ) {
+
+                                Text("Select")
+                            }
+                        }
+                    }
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            // =========================
+            // AUTO WALLPAPER
+            // =========================
+
+            Text(
+                text = "Auto Wallpaper",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             Button(
                 onClick = {
 
                     val minutes =
-                        intervalMinutes.toLongOrNull() ?: 15
+                        intervalMinutes
+                            .toLongOrNull()
+                            ?: 15
+
+                    if (
+                        minutes < 15
+                    ) {
+
+                        Toast.makeText(
+                            context,
+                            "Minimum interval is 15 minutes",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        return@Button
+                    }
+
+                    requestBatteryOptimizationExemption()
+
+                    scheduleWallpaperWorker(
+                        context,
+                        minutes
+                    )
+
+                    startForegroundWallpaperService()
 
                     Toast.makeText(
                         context,
-                        "Checking Battery Optimization",
+                        "Auto Wallpaper Started",
                         Toast.LENGTH_SHORT
                     ).show()
-                    if (minutes >= 15) {
-                        Toast.makeText(
-                            context,
-                            "Requesting Exemption",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        scheduleWallpaperWorker(
-                            context,
-                            minutes
-                        )
-                        scheduleWallpaperWorker(
-                            context,
-                            intervalMinutes = minutes
-                        )
-                        startForegroundWallpaperService()
-
-                        Toast.makeText(
-                            context,
-                            "Auto Wallpaper Started",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
                 }
             ) {
-                Text("Start Auto Wallpaper")
+
+                Text(
+                    "Start Auto Wallpaper"
+                )
             }
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             Button(
                 onClick = {
 
-                    stopWallpaperWorker(context)
+                    stopWallpaperWorker(
+                        context
+                    )
 
                     stopForegroundWallpaperService()
 
@@ -387,110 +798,148 @@ fun WallpaperScreen() {
                     ).show()
                 }
             ) {
-                Text("Stop Auto Wallpaper")
+
+                Text(
+                    "Stop Auto Wallpaper"
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+            // =========================
+            // PHOTO GRID SECTION
+            // =========================
 
-            if (selectedPhotos.isNotEmpty()) {
+            if (
+                selectedPhotos.isNotEmpty()
+            ) {
+
+                Text(
+                    text = "Selected Wallpapers",
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleMedium
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
 
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
+                    columns =
+                        GridCells.Fixed(2),
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 500.dp),
+
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            8.dp
+                        ),
+
+                    verticalArrangement =
+                        Arrangement.spacedBy(
+                            8.dp
+                        )
                 ) {
 
-                    items(selectedPhotos) { photo ->
+                    items(
+                        selectedPhotos
+                    ) { photo ->
 
                         AsyncImage(
                             model = photo,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .aspectRatio(9f / 16f)
-                                .clickable {
 
-                                    try {
+                            contentDescription =
+                                null,
 
-                                        val bitmap =
-                                            BitmapFactory.decodeStream(
-                                                context.contentResolver.openInputStream(photo)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(
+                                        9f / 16f
+                                    )
+                                    .clip(
+                                        RoundedCornerShape(
+                                            16.dp
+                                        )
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.Gray,
+                                        shape =
+                                            RoundedCornerShape(
+                                                16.dp
+                                            )
+                                    )
+                                    .clickable {
+
+                                        try {
+
+                                            val bitmap =
+                                                BitmapFactory
+                                                    .decodeStream(
+                                                        context
+                                                            .contentResolver
+                                                            .openInputStream(
+                                                                photo
+                                                            )
+                                                    )
+
+                                            applyWallpaper(
+                                                bitmap
                                             )
 
-                                        val wm = WallpaperManager.getInstance(context)
+                                            Toast.makeText(
+                                                context,
+                                                "Wallpaper Set!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
 
-                                        when (selectedTarget) {
+                                        } catch (
+                                            e: Exception
+                                        ) {
 
-                                            "Home" -> {
-                                                wm.setBitmap(
-                                                    bitmap,
-                                                    null,
-                                                    true,
-                                                    WallpaperManager.FLAG_SYSTEM
-                                                )
-                                            }
-
-                                            "Lock" -> {
-                                                wm.setBitmap(
-                                                    bitmap,
-                                                    null,
-                                                    true,
-                                                    WallpaperManager.FLAG_LOCK
-                                                )
-                                            }
-
-                                            "Both" -> {
-
-                                                wm.setBitmap(
-                                                    bitmap,
-                                                    null,
-                                                    true,
-                                                    WallpaperManager.FLAG_SYSTEM
-                                                )
-
-                                                wm.setBitmap(
-                                                    bitmap,
-                                                    null,
-                                                    true,
-                                                    WallpaperManager.FLAG_LOCK
-                                                )
-                                            }
+                                            Toast.makeText(
+                                                context,
+                                                e.message
+                                                    ?: "Failed to set wallpaper",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
-                                        WallpaperHistory.saveWallpaper(
-                                            context,
-                                            photo.toString()
-                                        )
+                                    },
 
-                                        wallpaperHistory =
-                                            WallpaperHistory.loadHistory(context)
-
-                                        Toast.makeText(
-                                            context,
-                                            "Wallpaper Set!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-
-                                    } catch (_: Exception) {
-                                    }
-                                }
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(
-                                    2.dp,
-                                    Color.Gray,
-                                    RoundedCornerShape(16.dp)
-                                ),
-                            contentScale = ContentScale.Fit
+                            contentScale =
+                                ContentScale.Fit
                         )
                     }
                 }
+
+            } else {
+
+                Text(
+                    text =
+                        "No wallpapers selected",
+
+                    style =
+                        MaterialTheme
+                            .typography
+                            .bodyMedium
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "History Count: ${wallpaperHistory.size}"
+            Spacer(
+                modifier =
+                    Modifier.height(
+                        24.dp
+                    )
             )
+
         }
     }
-}
+}}}
