@@ -161,6 +161,63 @@ fun WallpaperScreen() {
             )
     }
 
+    fun restoreDefaultWallpapers(
+        context: Context
+    ) {
+
+        try {
+
+            val wm =
+                WallpaperManager.getInstance(
+                    context
+                )
+
+            DefaultWallpaperStorage
+                .getHomeWallpaper(context)
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            context.contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_SYSTEM
+                    )
+                }
+
+            DefaultWallpaperStorage
+                .getLockWallpaper(context)
+                ?.let { uri ->
+
+                    val bitmap =
+                        BitmapFactory.decodeStream(
+                            context.contentResolver
+                                .openInputStream(
+                                    Uri.parse(uri)
+                                )
+                        )
+
+                    wm.setBitmap(
+                        bitmap,
+                        null,
+                        true,
+                        WallpaperManager.FLAG_LOCK
+                    )
+                }
+
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+        }
+    }
+
     fun stopWallpaperWorker(
         context: Context
     ) {
@@ -169,8 +226,10 @@ fun WallpaperScreen() {
             .cancelUniqueWork(
                 "wallpaper_worker"
             )
+        restoreDefaultWallpapers(
+            context
+        )
     }
-
     // =========================
     // FOREGROUND SERVICE
     // =========================
@@ -256,62 +315,7 @@ fun WallpaperScreen() {
     // =========================
     // WALLPAPER HELPER FUNCTION
     // =========================
-    fun applyDefaultWallpapers() {
 
-        val wm =
-            WallpaperManager.getInstance(context)
-
-        try {
-
-            DefaultWallpaperStorage
-                .getHomeWallpaper(context)
-                ?.let { uri ->
-
-                    val bitmap =
-                        BitmapFactory.decodeStream(
-                            context.contentResolver
-                                .openInputStream(
-                                    Uri.parse(uri)
-                                )
-                        )
-
-                    wm.setBitmap(
-                        bitmap,
-                        null,
-                        true,
-                        WallpaperManager.FLAG_SYSTEM
-                    )
-                }
-
-            DefaultWallpaperStorage
-                .getLockWallpaper(context)
-                ?.let { uri ->
-
-                    val bitmap =
-                        BitmapFactory.decodeStream(
-                            context.contentResolver
-                                .openInputStream(
-                                    Uri.parse(uri)
-                                )
-                        )
-
-                    wm.setBitmap(
-                        bitmap,
-                        null,
-                        true,
-                        WallpaperManager.FLAG_LOCK
-                    )
-                }
-
-        } catch (e: Exception) {
-
-            Toast.makeText(
-                context,
-                "Failed to apply default wallpapers",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
     // =========================
     // LOAD SAVED DATA
     // =========================
@@ -773,232 +777,236 @@ fun WallpaperScreen() {
                             }
                         }
                     }
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
+                    Spacer(
+                        modifier = Modifier.height(24.dp)
+                    )
 
-            // =========================
-            // AUTO WALLPAPER
-            // =========================
+                    // =========================
+                    // AUTO WALLPAPER
+                    // =========================
 
-            Text(
-                text = "Auto Wallpaper",
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium
-            )
+                    Text(
+                        text = "Auto Wallpaper",
+                        style =
+                            MaterialTheme
+                                .typography
+                                .titleMedium
+                    )
 
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
 
-            Button(
-                onClick = {
+                    Button(
+                        onClick = {
 
-                    val minutes =
-                        intervalMinutes
-                            .toLongOrNull()
-                            ?: 15
+                            val minutes =
+                                intervalMinutes
+                                    .toLongOrNull()
+                                    ?: 15
 
-                    if (
-                        minutes < 15
+                            if (
+                                minutes < 15
+                            ) {
+
+                                Toast.makeText(
+                                    context,
+                                    "Minimum interval is 15 minutes",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                return@Button
+                            }
+
+                            requestBatteryOptimizationExemption()
+
+                            scheduleWallpaperWorker(
+                                context,
+                                minutes
+                            )
+
+                            startForegroundWallpaperService()
+
+                            Toast.makeText(
+                                context,
+                                "Auto Wallpaper Started",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     ) {
 
-                        Toast.makeText(
-                            context,
-                            "Minimum interval is 15 minutes",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        return@Button
+                        Text(
+                            "Start Auto Wallpaper"
+                        )
                     }
 
-                    requestBatteryOptimizationExemption()
-
-                    scheduleWallpaperWorker(
-                        context,
-                        minutes
+                    Spacer(
+                        modifier = Modifier.height(10.dp)
                     )
 
-                    startForegroundWallpaperService()
+                    Button(
+                        onClick = {
 
-                    Toast.makeText(
-                        context,
-                        "Auto Wallpaper Started",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            ) {
+                            stopWallpaperWorker(
+                                context
+                            )
 
-                Text(
-                    "Start Auto Wallpaper"
-                )
-            }
+                            stopForegroundWallpaperService()
+                            restoreDefaultWallpapers(
+                                context
+                            )
 
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
+                            Toast.makeText(
+                                context,
+                                "Auto Wallpaper Stopped",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    ) {
 
-            Button(
-                onClick = {
-
-                    stopWallpaperWorker(
-                        context
-                    )
-
-                    stopForegroundWallpaperService()
-                    applyDefaultWallpapers()
-
-                    Toast.makeText(
-                        context,
-                        "Auto Wallpaper Stopped",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            ) {
-
-                Text(
-                    "Stop Auto Wallpaper"
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-            // =========================
-            // PHOTO GRID SECTION
-            // =========================
-
-            if (
-                selectedPhotos.isNotEmpty()
-            ) {
-
-                Text(
-                    text = "Selected Wallpapers",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .titleMedium
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                LazyVerticalGrid(
-                    columns =
-                        GridCells.Fixed(2),
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 500.dp),
-
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            8.dp
-                        ),
-
-                    verticalArrangement =
-                        Arrangement.spacedBy(
-                            8.dp
+                        Text(
+                            "Stop Auto Wallpaper"
                         )
-                ) {
+                    }
 
-                    items(
-                        selectedPhotos
-                    ) { photo ->
+                    Spacer(
+                        modifier = Modifier.height(24.dp)
+                    )
+                    // =========================
+                    // PHOTO GRID SECTION
+                    // =========================
 
-                        AsyncImage(
-                            model = photo,
+                    if (
+                        selectedPhotos.isNotEmpty()
+                    ) {
 
-                            contentDescription =
-                                null,
+                        Text(
+                            text = "Selected Wallpapers",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleMedium
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(12.dp)
+                        )
+
+                        LazyVerticalGrid(
+                            columns =
+                                GridCells.Fixed(2),
 
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(
-                                        9f / 16f
-                                    )
-                                    .clip(
-                                        RoundedCornerShape(
-                                            16.dp
-                                        )
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        color = Color.Gray,
-                                        shape =
-                                            RoundedCornerShape(
-                                                16.dp
+                                    .heightIn(max = 500.dp),
+
+                            horizontalArrangement =
+                                Arrangement.spacedBy(
+                                    8.dp
+                                ),
+
+                            verticalArrangement =
+                                Arrangement.spacedBy(
+                                    8.dp
+                                )
+                        ) {
+
+                            items(
+                                selectedPhotos
+                            ) { photo ->
+
+                                AsyncImage(
+                                    model = photo,
+
+                                    contentDescription =
+                                        null,
+
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(
+                                                9f / 16f
                                             )
-                                    )
-                                    .clickable {
+                                            .clip(
+                                                RoundedCornerShape(
+                                                    16.dp
+                                                )
+                                            )
+                                            .border(
+                                                width = 2.dp,
+                                                color = Color.Gray,
+                                                shape =
+                                                    RoundedCornerShape(
+                                                        16.dp
+                                                    )
+                                            )
+                                            .clickable {
 
-                                        try {
+                                                try {
 
-                                            val bitmap =
-                                                BitmapFactory
-                                                    .decodeStream(
-                                                        context
-                                                            .contentResolver
-                                                            .openInputStream(
-                                                                photo
+                                                    val bitmap =
+                                                        BitmapFactory
+                                                            .decodeStream(
+                                                                context
+                                                                    .contentResolver
+                                                                    .openInputStream(
+                                                                        photo
+                                                                    )
                                                             )
+
+                                                    applyWallpaper(
+                                                        bitmap
                                                     )
 
-                                            applyWallpaper(
-                                                bitmap
-                                            )
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Wallpaper Set!",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
 
-                                            Toast.makeText(
-                                                context,
-                                                "Wallpaper Set!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                                } catch (
+                                                    e: Exception
+                                                ) {
 
-                                        } catch (
-                                            e: Exception
-                                        ) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        e.message
+                                                            ?: "Failed to set wallpaper",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                            },
 
-                                            Toast.makeText(
-                                                context,
-                                                e.message
-                                                    ?: "Failed to set wallpaper",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    },
+                                    contentScale =
+                                        ContentScale.Fit
+                                )
+                            }
+                        }
 
-                            contentScale =
-                                ContentScale.Fit
+                    } else {
+
+                        Text(
+                            text =
+                                "No wallpapers selected",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyMedium
                         )
                     }
-                }
 
-            } else {
-
-                Text(
-                    text =
-                        "No wallpapers selected",
-
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodyMedium
-                )
-            }
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        24.dp
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                24.dp
+                            )
                     )
-            )
 
+                }
+            }
         }
     }
-}}}
+}
