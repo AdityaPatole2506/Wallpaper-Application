@@ -1024,6 +1024,16 @@ fun WallpaperScreen() {
                     Text("Apply")
                 }
             },
+            dismissButton = {
+
+                Button(
+                    onClick = {
+                        previewPhoto = null
+                    }
+                ) {
+                    Text("Close")
+                }
+            },
 
             text = {
 
