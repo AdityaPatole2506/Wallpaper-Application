@@ -91,6 +91,10 @@ fun WallpaperScreen() {
         mutableStateOf("15")
     }
 
+    var previewPhoto by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
     var selectedTarget by remember {
         mutableStateOf("Both")
     }
@@ -852,9 +856,6 @@ fun WallpaperScreen() {
                             )
 
                             stopForegroundWallpaperService()
-                            restoreDefaultWallpapers(
-                                context
-                            )
 
                             Toast.makeText(
                                 context,
@@ -943,40 +944,7 @@ fun WallpaperScreen() {
                                                     )
                                             )
                                             .clickable {
-
-                                                try {
-
-                                                    val bitmap =
-                                                        BitmapFactory
-                                                            .decodeStream(
-                                                                context
-                                                                    .contentResolver
-                                                                    .openInputStream(
-                                                                        photo
-                                                                    )
-                                                            )
-
-                                                    applyWallpaper(
-                                                        bitmap
-                                                    )
-
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Wallpaper Set!",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-
-                                                } catch (
-                                                    e: Exception
-                                                ) {
-
-                                                    Toast.makeText(
-                                                        context,
-                                                        e.message
-                                                            ?: "Failed to set wallpaper",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
+                                                previewPhoto = photo
                                             },
 
                                     contentScale =
@@ -1008,5 +976,69 @@ fun WallpaperScreen() {
                 }
             }
         }
+    }
+
+    if (previewPhoto != null) {
+
+        AlertDialog(
+            onDismissRequest = {
+                previewPhoto = null
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        try {
+
+                            val bitmap =
+                                BitmapFactory.decodeStream(
+                                    context.contentResolver
+                                        .openInputStream(
+                                            previewPhoto!!
+                                        )
+                                )
+
+                            applyWallpaper(bitmap)
+
+                            Toast.makeText(
+                                context,
+                                "Wallpaper Set!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            previewPhoto = null
+
+                        } catch (e: Exception) {
+
+                            Toast.makeText(
+                                context,
+                                e.message
+                                    ?: "Failed to set wallpaper",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                ) {
+                    Text("Apply")
+                }
+            },
+
+            text = {
+
+                AsyncImage(
+                    model = previewPhoto,
+                    contentDescription = null,
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(500.dp),
+
+                    contentScale =
+                    ContentScale.Fit
+                )
+            }
+        )
     }
 }
