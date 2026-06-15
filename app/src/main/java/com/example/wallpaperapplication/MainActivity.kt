@@ -52,6 +52,7 @@ import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.combinedClickable
 
 // =========================
 // MAIN ACTIVITY
@@ -85,6 +86,10 @@ fun WallpaperScreen() {
 
     var selectedPhotos by remember {
         mutableStateOf<List<Uri>>(emptyList())
+    }
+
+    var photoToDelete by remember {
+        mutableStateOf<Uri?>(null)
     }
 
     var intervalMinutes by remember {
@@ -431,6 +436,68 @@ fun WallpaperScreen() {
                     )
             }
         }
+    // =========================
+// DELETE WALLPAPER DIALOG
+// =========================
+
+    if (photoToDelete != null) {
+
+        AlertDialog(
+            onDismissRequest = {
+                photoToDelete = null
+            },
+
+            title = {
+                Text("Remove Wallpaper")
+            },
+
+            text = {
+                Text(
+                    "Do you want to remove this wallpaper from your collection?"
+                )
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        selectedPhotos =
+                            selectedPhotos.filter {
+                                it != photoToDelete
+                            }
+
+                        scope.launch {
+
+                            PhotoStorage.savePhotos(
+                                context,
+                                selectedPhotos.map {
+                                    it.toString()
+                                }
+                            )
+                        }
+
+                        photoToDelete = null
+                    }
+                ) {
+                    Text("Remove")
+                }
+            },
+
+            dismissButton = {
+
+                Button(
+                    onClick = {
+                        photoToDelete = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+
     // =========================
     // MAIN UI
     // =========================
@@ -943,9 +1010,16 @@ fun WallpaperScreen() {
                                                         16.dp
                                                     )
                                             )
-                                            .clickable {
-                                                previewPhoto = photo
-                                            },
+                                            .combinedClickable(
+
+                                                onClick = {
+                                                    previewPhoto = photo
+                                                },
+
+                                                onLongClick = {
+                                                    photoToDelete = photo
+                                                }
+                                            ),
 
                                     contentScale =
                                         ContentScale.Fit
