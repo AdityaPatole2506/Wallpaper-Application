@@ -1,70 +1,88 @@
 # 📱 Wallpaper Application
 
-An Android wallpaper changer application built with **Kotlin** and **Jetpack Compose**, designed to make wallpaper management simple, customizable, and automated.
+A modern Android wallpaper manager built with **Kotlin**, **Jetpack Compose**, and **Material 3**.
+
+The app allows users to select multiple wallpapers, preview them before applying, automatically rotate wallpapers at custom intervals, and configure default Home and Lock screen wallpapers for fallback restoration.
+
+---
 
 ## ✨ Features
 
-### 🖼️ Wallpaper Management
+### 🖼️ Wallpaper Selection
 
-* Select and store multiple photos from your device
-* Set a random wallpaper with a single tap
-* Tap any photo to instantly apply it as wallpaper
-* Support for Home Screen, Lock Screen, or Both Screens
+* Select multiple photos using Android Photo Picker
+* Persistent photo storage using DataStore
+* View all selected wallpapers in a responsive grid
 
-### 📂 Photo Selection
+### 👀 Wallpaper Preview
 
-* Android Photo Picker integration
-* Persistent photo storage across app restarts
-* Manage your personal wallpaper collection
+* Tap any wallpaper to open a preview dialog
+* Apply wallpapers only after confirmation
+* Prevents accidental wallpaper changes
 
-### ⚙️ Automation
+### 🎲 Random Wallpaper
 
-* Automatic wallpaper changing using WorkManager
-* Background wallpaper updates
-* Foreground service support for reliable execution
-* Screen-on event support for dynamic wallpaper changes
+* Instantly apply a random wallpaper from the selected collection
+* Supports Home Screen, Lock Screen, or Both
 
-### 🎨 User Interface
+### ⚙️ Auto Wallpaper
+
+* Automatic wallpaper rotation using WorkManager
+* Custom interval selection (minutes)
+* Start and stop auto wallpaper service
+* Foreground service support
+
+### 🏠 Default Wallpapers
+
+* Select a default Home wallpaper
+* Select a default Lock wallpaper
+* Persistent storage using SharedPreferences
+
+### 🔄 Fallback Wallpaper Restoration
+
+* Automatically restores default wallpapers when:
+
+  * No wallpapers are available
+  * Auto wallpaper is stopped
+  * Wallpaper worker cannot load wallpapers
+
+### 🎨 Modern UI
 
 * Built entirely with Jetpack Compose
 * Material 3 design system
-* Responsive and modern UI
-* Wallpaper gallery with image previews
+* Wallpaper previews displayed side-by-side
+* Clean and responsive layout
+
+---
 
 ## 🛠️ Tech Stack
 
-* **Kotlin**
-* **Jetpack Compose**
-* **Material 3**
-* **WorkManager**
-* **Android Photo Picker**
-* **Foreground Services**
-* **Broadcast Receivers**
-* **DataStore Preferences**
+* Kotlin
+* Jetpack Compose
+* Material 3
+* WorkManager
+* Android Photo Picker
+* DataStore Preferences
+* SharedPreferences
+* Foreground Services
+* Coil AsyncImage
 
-## 🚀 Current Status
+---
 
-The application currently supports:
+## 🚀 Upcoming Features
 
-* Wallpaper selection and management
-* Random wallpaper generation
-* Automatic wallpaper scheduling
-* Home/Lock screen targeting
-* Persistent wallpaper collections
+* Wallpaper categories
+* Favorites system
+* Remove selected wallpapers
+* Backup & restore settings
+* Scheduled wallpaper changes
+* Wallpaper statistics
+* Cloud sync support
 
-## 🔮 Planned Features
+---
 
-* Default/Fallback Wallpapers
-* Wallpaper Scale Options (Fit/Crop)
-* Full-Screen Wallpaper Preview
-* Improved Settings Screen
-* Enhanced Gallery UI
-* Wallpaper Categories & Albums
+## 👨‍💻 Author
 
-## 📸 Screenshots
+**Aditya Patole**
 
-*Add screenshots here.*
-
-## 📄 License
-
-This project is open source and available under the MIT License.
+Android Wallpaper Application built for learning Android development with Kotlin and Jetpack Compose.
