@@ -115,6 +115,10 @@ fun WallpaperScreen() {
     val scrollState =
         rememberScrollState()
 
+    var showClearAllDialog by remember {
+        mutableStateOf(false)
+    }
+
     // =========================
     // BATTERY OPTIMIZATION
     // =========================
@@ -501,6 +505,58 @@ fun WallpaperScreen() {
     // =========================
     // MAIN UI
     // =========================
+
+    if (showClearAllDialog) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showClearAllDialog = false
+            },
+
+            title = {
+                Text("Clear All Wallpapers")
+            },
+
+            text = {
+                Text(
+                    "Are you sure you want to remove all selected wallpapers?"
+                )
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        selectedPhotos = emptyList()
+
+                        scope.launch {
+
+                            PhotoStorage.savePhotos(
+                                context,
+                                emptyList()
+                            )
+                        }
+
+                        showClearAllDialog = false
+                    }
+                ) {
+                    Text("Clear All")
+                }
+            },
+
+            dismissButton = {
+
+                Button(
+                    onClick = {
+                        showClearAllDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -996,6 +1052,13 @@ fun WallpaperScreen() {
                                     .typography
                                     .titleMedium
                         )
+                        Button(
+                            onClick = {
+                                showClearAllDialog = true
+                            }
+                        ) {
+                            Text("Clear All")
+                        }
 
                         Spacer(
                             modifier =
