@@ -72,4 +72,29 @@ object DefaultWallpaperStorage {
                 null
             )
     }
+
+    fun removeHomeWallpaper(
+        context: Context
+    ) {
+
+        context.getSharedPreferences(
+            PREFS_NAME,
+            Context.MODE_PRIVATE
+        ).edit {
+            remove(HOME_WALLPAPER)
+        }
+    }
+
+    fun removeLockWallpaper(
+        context: Context
+    ) {
+
+        context.getSharedPreferences(
+            PREFS_NAME,
+            Context.MODE_PRIVATE
+        ).edit {
+            remove(LOCK_WALLPAPER)
+        }
+    }
+
 }

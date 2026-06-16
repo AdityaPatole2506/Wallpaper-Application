@@ -786,6 +786,27 @@ fun WallpaperScreen() {
 
                                 Text("Select")
                             }
+                            Spacer(
+                                modifier = Modifier.height(8.dp)
+                            )
+
+                            if (defaultHomeWallpaper != null) {
+
+                                Button(
+                                    onClick = {
+
+                                        DefaultWallpaperStorage
+                                            .removeHomeWallpaper(
+                                                context
+                                            )
+
+                                        defaultHomeWallpaper = null
+                                    }
+                                ) {
+                                    Text("Remove")
+                                }
+                            }
+
                         }
 
                         // =========================
@@ -845,6 +866,26 @@ fun WallpaperScreen() {
                             ) {
 
                                 Text("Select")
+                            }
+                            Spacer(
+                                modifier = Modifier.height(8.dp)
+                            )
+
+                            if (defaultLockWallpaper != null) {
+
+                                Button(
+                                    onClick = {
+
+                                        DefaultWallpaperStorage
+                                            .removeLockWallpaper(
+                                                context
+                                            )
+
+                                        defaultLockWallpaper = null
+                                    }
+                                ) {
+                                    Text("Remove")
+                                }
                             }
                         }
                     }
