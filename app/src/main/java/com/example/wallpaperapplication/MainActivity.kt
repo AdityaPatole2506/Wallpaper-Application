@@ -995,6 +995,10 @@ fun WallpaperScreen() {
 
                             startForegroundWallpaperService()
 
+                            AutoWallpaperPreferences.setEnabled(
+                                context,
+                                true
+                            )
                             Toast.makeText(
                                 context,
                                 "Auto Wallpaper Started",
@@ -1020,6 +1024,11 @@ fun WallpaperScreen() {
                             )
 
                             stopForegroundWallpaperService()
+
+                            AutoWallpaperPreferences.setEnabled(
+                                context,
+                                false
+                            )
 
                             Toast.makeText(
                                 context,
