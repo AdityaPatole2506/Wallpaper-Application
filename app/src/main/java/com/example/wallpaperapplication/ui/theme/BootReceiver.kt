@@ -30,11 +30,19 @@ class BootReceiver : BroadcastReceiver() {
                         context,
                         WallpaperForegroundService::class.java
                     )
+                val intervalMinutes =
+                    IntervalStorage
+                        .getInterval(
+                            context
+                        )
+                        .toLongOrNull()
+                        ?: 15L
+
                 val workRequest =
                     PeriodicWorkRequestBuilder<
                             WallpaperWorker
                             >(
-                        15,
+                        intervalMinutes,
                         TimeUnit.MINUTES
                     ).build()
 
