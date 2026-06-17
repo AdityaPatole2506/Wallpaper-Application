@@ -93,7 +93,11 @@ fun WallpaperScreen() {
     }
 
     var intervalMinutes by remember {
-        mutableStateOf("15")
+        mutableStateOf(
+            IntervalStorage.getInterval(
+                context
+            )
+        )
     }
 
     var previewPhoto by remember {
@@ -686,8 +690,14 @@ fun WallpaperScreen() {
                 value = intervalMinutes,
 
                 onValueChange = {
+
                     intervalMinutes = it
-                },
+
+                    IntervalStorage.saveInterval(
+                        context,
+                        it
+                    )
+                }git commit -m "feat: save auto wallpaper interval",
 
                 label = {
                     Text(
