@@ -100,6 +100,14 @@ fun WallpaperScreen() {
         )
     }
 
+    var isAutoWallpaperEnabled by remember {
+        mutableStateOf(
+            AutoWallpaperPreferences.isEnabled(
+                context
+            )
+        )
+    }
+
     var previewPhoto by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -193,40 +201,52 @@ fun WallpaperScreen() {
                 .getHomeWallpaper(context)
                 ?.let { uri ->
 
-                    val bitmap =
-                        BitmapFactory.decodeStream(
-                            context.contentResolver
-                                .openInputStream(
-                                    Uri.parse(uri)
-                                )
-                        )
+                    val inputStream =
+                        context.contentResolver
+                            .openInputStream(
+                                Uri.parse(uri)
+                            )
 
-                    wm.setBitmap(
-                        bitmap,
-                        null,
-                        true,
-                        WallpaperManager.FLAG_SYSTEM
-                    )
+                    val bitmap =
+                        inputStream?.let {
+                            BitmapFactory.decodeStream(it)
+                        }
+
+                    if (bitmap != null) {
+
+                        wm.setBitmap(
+                            bitmap,
+                            null,
+                            true,
+                            WallpaperManager.FLAG_SYSTEM
+                        )
+                    }
                 }
 
             DefaultWallpaperStorage
                 .getLockWallpaper(context)
                 ?.let { uri ->
 
-                    val bitmap =
-                        BitmapFactory.decodeStream(
-                            context.contentResolver
-                                .openInputStream(
-                                    Uri.parse(uri)
-                                )
-                        )
+                    val inputStream =
+                        context.contentResolver
+                            .openInputStream(
+                                Uri.parse(uri)
+                            )
 
-                    wm.setBitmap(
-                        bitmap,
-                        null,
-                        true,
-                        WallpaperManager.FLAG_LOCK
-                    )
+                    val bitmap =
+                        inputStream?.let {
+                            BitmapFactory.decodeStream(it)
+                        }
+
+                    if (bitmap != null) {
+
+                        wm.setBitmap(
+                            bitmap,
+                            null,
+                            true,
+                            WallpaperManager.FLAG_LOCK
+                        )
+                    }
                 }
 
         } catch (e: Exception) {
@@ -971,11 +991,26 @@ fun WallpaperScreen() {
                                 .titleMedium
                     )
 
+                    Text(
+                        text =
+                            if (isAutoWallpaperEnabled)
+                                "Status: Running 🟢"
+                            else
+                                "Status: Stopped 🔴",
+
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium
+                    )
+
                     Spacer(
                         modifier = Modifier.height(12.dp)
                     )
 
                     Button(
+                        enabled = !isAutoWallpaperEnabled,
+
                         onClick = {
 
                             val minutes =
@@ -1009,6 +1044,9 @@ fun WallpaperScreen() {
                                 context,
                                 true
                             )
+
+                            isAutoWallpaperEnabled = true
+
                             Toast.makeText(
                                 context,
                                 "Auto Wallpaper Started",
@@ -1027,24 +1065,41 @@ fun WallpaperScreen() {
                     )
 
                     Button(
+                        enabled = isAutoWallpaperEnabled,
+
                         onClick = {
 
-                            stopWallpaperWorker(
-                                context
-                            )
+                            try {
 
-                            stopForegroundWallpaperService()
+                                stopWallpaperWorker(
+                                    context
+                                )
 
-                            AutoWallpaperPreferences.setEnabled(
-                                context,
-                                false
-                            )
+                                stopForegroundWallpaperService()
 
-                            Toast.makeText(
-                                context,
-                                "Auto Wallpaper Stopped",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                                AutoWallpaperPreferences.setEnabled(
+                                    context,
+                                    false
+                                )
+
+                                isAutoWallpaperEnabled = false
+
+                                Toast.makeText(
+                                    context,
+                                    "Auto Wallpaper Stopped",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                            } catch (e: Exception) {
+
+                                Toast.makeText(
+                                    context,
+                                    e.message ?: "Error",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                e.printStackTrace()
+                            }
                         }
                     ) {
 
@@ -1056,6 +1111,7 @@ fun WallpaperScreen() {
                     Spacer(
                         modifier = Modifier.height(24.dp)
                     )
+
                     // =========================
                     // PHOTO GRID SECTION
                     // =========================
