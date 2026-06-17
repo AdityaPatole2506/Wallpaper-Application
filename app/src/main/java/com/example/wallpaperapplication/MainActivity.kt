@@ -697,7 +697,7 @@ fun WallpaperScreen() {
                         context,
                         it
                     )
-                }git commit -m "feat: save auto wallpaper interval",
+                },
 
                 label = {
                     Text(
