@@ -1275,15 +1275,55 @@ fun WallpaperScreen() {
 
                     } else {
 
-                        Text(
-                            text =
-                                "No wallpapers selected",
+                        Column(
+                            horizontalAlignment =
+                                Alignment.CenterHorizontally,
 
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyMedium
-                        )
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp)
+                        ) {
+
+                            Text(
+                                text = "🖼️",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .headlineLarge
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "No wallpapers selected",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(4.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Tap 'Select Photos' to add wallpapers for randomization and auto wallpaper.",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyMedium
+                            )
+                        }
                     }
 
                     Spacer(
