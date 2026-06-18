@@ -1172,19 +1172,34 @@ fun WallpaperScreen() {
                         selectedPhotos.isNotEmpty()
                     ) {
 
-                        Text(
-                            text = "Selected Wallpapers",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleMedium
-                        )
-                        Button(
-                            onClick = {
-                                showClearAllDialog = true
-                            }
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth(),
+
+                            horizontalArrangement =
+                                Arrangement.SpaceBetween,
+
+                            verticalAlignment =
+                                Alignment.CenterVertically
                         ) {
-                            Text("Clear All")
+
+                            Text(
+                                text =
+                                    "Selected Wallpapers: ${selectedPhotos.size}",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium
+                            )
+
+                            Button(
+                                onClick = {
+                                    showClearAllDialog = true
+                                }
+                            ) {
+                                Text("Clear All")
+                            }
                         }
 
                         Spacer(
