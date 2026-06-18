@@ -1109,9 +1109,61 @@ fun WallpaperScreen() {
                     }
 
                     Spacer(
-                        modifier = Modifier.height(24.dp)
+                        modifier = Modifier.height(10.dp)
                     )
 
+                    Button(
+                        enabled =
+                            selectedPhotos.isNotEmpty(),
+
+                        onClick = {
+
+                            try {
+
+                                val randomPhoto =
+                                    selectedPhotos.random()
+
+                                val bitmap =
+                                    BitmapFactory.decodeStream(
+                                        context.contentResolver
+                                            .openInputStream(
+                                                randomPhoto
+                                            )
+                                    )
+
+                                if (bitmap != null) {
+
+                                    applyWallpaper(
+                                        bitmap
+                                    )
+
+                                    Toast.makeText(
+                                        context,
+                                        "Wallpaper Shuffled!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                            } catch (e: Exception) {
+
+                                Toast.makeText(
+                                    context,
+                                    e.message
+                                        ?: "Failed to shuffle wallpaper",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    ) {
+
+                        Text(
+                            "Shuffle Now"
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(24.dp)
+                    )
                     // =========================
                     // PHOTO GRID SECTION
                     // =========================
