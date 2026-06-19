@@ -1,88 +1,101 @@
 # 📱 Wallpaper Application
 
-A modern Android wallpaper manager built with **Kotlin**, **Jetpack Compose**, and **Material 3**.
-
-The app allows users to select multiple wallpapers, preview them before applying, automatically rotate wallpapers at custom intervals, and configure default Home and Lock screen wallpapers for fallback restoration.
-
----
+A modern Android wallpaper manager built using **Kotlin** and **Jetpack Compose** that allows users to manage, preview, and automatically rotate wallpapers with a clean Material 3 interface.
 
 ## ✨ Features
 
-### 🖼️ Wallpaper Selection
+### 🖼️ Wallpaper Management
 
-* Select multiple photos using Android Photo Picker
-* Persistent photo storage using DataStore
-* View all selected wallpapers in a responsive grid
+* Select multiple wallpapers using Android Photo Picker
+* Preview wallpapers before applying
+* Apply wallpapers instantly
+* Random wallpaper selection
+* Shuffle wallpapers instantly with **Shuffle Now**
+* Remove individual wallpapers
+* Clear all selected wallpapers
 
-### 👀 Wallpaper Preview
+### 🎯 Wallpaper Targets
 
-* Tap any wallpaper to open a preview dialog
-* Apply wallpapers only after confirmation
-* Prevents accidental wallpaper changes
+* Set wallpaper for:
 
-### 🎲 Random Wallpaper
+  * Home Screen
+  * Lock Screen
+  * Both Screens
 
-* Instantly apply a random wallpaper from the selected collection
-* Supports Home Screen, Lock Screen, or Both
+### 🔄 Auto Wallpaper
 
-### ⚙️ Auto Wallpaper
+* Automatic wallpaper rotation
+* Custom interval support
+* Foreground service support for reliability
+* Smart Start/Stop controls
+* Running/Stopped status indicator
+* Interval persistence across app restarts
 
-* Automatic wallpaper rotation using WorkManager
-* Custom interval selection (minutes)
-* Start and stop auto wallpaper service
-* Foreground service support
+### 💾 Persistence & Recovery
 
-### 🏠 Default Wallpapers
+* Save selected wallpapers locally
+* Save auto wallpaper interval
+* Save auto wallpaper enabled state
+* Restore auto wallpaper after device reboot
+* Restore saved interval after reboot
 
-* Select a default Home wallpaper
-* Select a default Lock wallpaper
-* Persistent storage using SharedPreferences
+### 🛡️ Default Wallpaper Protection
 
-### 🔄 Fallback Wallpaper Restoration
+* Set default Home wallpaper
+* Set default Lock wallpaper
+* Automatically restore default wallpapers when auto wallpaper stops
+* Remove default wallpapers individually
+* Null-safe wallpaper restoration to prevent crashes
 
-* Automatically restores default wallpapers when:
+### 🎨 User Experience Improvements
 
-  * No wallpapers are available
-  * Auto wallpaper is stopped
-  * Wallpaper worker cannot load wallpapers
+* Material 3 UI
+* Responsive wallpaper grid
+* Wallpaper counter display
+* Improved empty state screen
+* Confirmation dialogs for destructive actions
+* Long-press wallpaper removal
+* Smart button states to prevent invalid actions
 
-### 🎨 Modern UI
-
-* Built entirely with Jetpack Compose
-* Material 3 design system
-* Wallpaper previews displayed side-by-side
-* Clean and responsive layout
-
----
-
-## 🛠️ Tech Stack
+## 📂 Tech Stack
 
 * Kotlin
 * Jetpack Compose
 * Material 3
 * WorkManager
-* Android Photo Picker
-* DataStore Preferences
-* SharedPreferences
 * Foreground Services
-* Coil AsyncImage
+* SharedPreferences
+* Android Photo Picker
+* Coil
 
----
+## 🚀 Current Capabilities
 
-## 🚀 Upcoming Features
+* Manual wallpaper application
+* Random wallpaper application
+* Instant wallpaper shuffling
+* Scheduled wallpaper rotation
+* Device reboot recovery
+* Home/Lock/Both wallpaper targeting
+* Default wallpaper restoration
 
-* Wallpaper categories
-* Favorites system
-* Remove selected wallpapers
-* Backup & restore settings
-* Scheduled wallpaper changes
-* Wallpaper statistics
-* Cloud sync support
+## 📸 Application Flow
 
----
+1. Select wallpapers from device storage
+2. Preview wallpapers before applying
+3. Choose target (Home / Lock / Both)
+4. Apply wallpaper manually or randomly
+5. Enable Auto Wallpaper for scheduled rotation
+6. Use Shuffle Now for instant wallpaper changes
+
+## 🔮 Future Improvements
+
+* Wallpaper Categories
+* Favorites System
+* Enhanced Preview Screen
+* UI Animations
+* Backup & Restore
+* Wallpaper Statistics
 
 ## 👨‍💻 Author
 
 **Aditya Patole**
-
-Android Wallpaper Application built for learning Android development with Kotlin and Jetpack Compose.
